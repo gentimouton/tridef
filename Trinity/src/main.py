@@ -1,15 +1,16 @@
 import pygame
 from pygame.locals import QUIT, KEYDOWN, K_ESCAPE, MOUSEBUTTONUP
+
 from gameboard import GameBoard
 
 
 
 def main():
     #init
-    FPS = 2
+    FPS = 2 #number of frames per second
     SCREENCAPTION = "Trinity 0.0"
     pygame.init()
-    resolution = (800,600)
+    resolution = (800, 600) #in pixels
     screen = pygame.display.set_mode(resolution)
     pygame.display.set_caption(SCREENCAPTION)
     pygame.mouse.set_visible(1) #1 == visible, 0==invisible
@@ -18,16 +19,17 @@ def main():
   
     
     #game testing
-    gameBoard.addTower()
-    gameBoard.addCreep()
-    
+    gameBoard.add_tower()
+    gameBoard.add_creep()
+
+
     #Main Loop
     while 1:
         print("tick")
         clock.tick(FPS)
         pygame.display.set_caption(SCREENCAPTION + " --- FPS: " + str(clock.get_fps()))
         gameBoard.update()
-        if gameBoard.isGameOver():
+        if gameBoard.is_game_over():
             print("game over!")
             return
         pygame.display.flip() #reveal the scene - this is the last thing to do in the loop
@@ -39,9 +41,9 @@ def main():
                 return
             if event.type is MOUSEBUTTONUP:
                 if event.dict['button'] == 1: #'button' == 1:left click, 2 == middle, 3 == right ; 'pos' == (x,y) == position of click
-                    gameBoard.leftClick(event.dict['pos'])
+                    gameBoard.do_left_click(event.dict['pos'])
                 elif event.dict['button'] == 3: #right click
-                    gameBoard.rightClick(event.dict['pos'])
+                    gameBoard.do_right_click(event.dict['pos'])
 
 
 if __name__ == '__main__': main()

@@ -1,4 +1,5 @@
 import pygame
+
 from tower import Tower
 from creep import Creep
 from map import Map
@@ -7,30 +8,31 @@ from map import Map
 #for now, gameboard is both mechanics and graphics
 class GameBoard():
     
-    def __init__(self, screen, res, mapfile): #res = 800*600
-        self.screen = screen
-        # MECHANICS (some need to be done before GRAPHICS)
-        self.map = Map(mapfile, res) #load map from file
-        self.TOWERLIST = []
-        self.CREEPLIST = []
-        self.ATTACKSLIST = [] #elements are (u, v, color), where u and v can be towers or creeps, u is attacking v, and color is the one used to draw the atk lines between them
+    def __init__(self, screen, res, mapfile): #res = 800*600 as of March 2011
+        self.__screen = screen
+        # mechanics (some need to be done before graphics)
+        self.__MAP = Map(mapfile, res) #load map from file
+        self.__tower_list = []
+        self.__creep_list = []
+        self.__attack_list = [] #list elements are (u, v, color), where u and v can be towers or creeps, u is attacker, v is defender, and color is the one used to draw the atk lines between u and v
         # graphics of BG
-        self.currentSelection = None #stores what the player has selected under her click
-        self.defaultbg = self.makeBg(screen) # representation of the map with only walkable and non-walkable cells drawn
-        self.bg = self.defaultbg.copy() # it is the temp bg always updated during the game loop  
-        self.allsprites = pygame.sprite.Group()
+        self.__current_selection = None #stores what the player has selected under her click
+        self.__DEFAULT_BG = self._make_bg(screen) # representation of the map with only walkable and non-walkable cells drawn
+        self.__bg = self.__DEFAULT_BG.copy() # it is the temp bg always updated during the game loop  
+        self.__all_sprites = pygame.sprite.Group()
         return
-    # create a representation of the map with only walkable and non-walkable cells drawn
-    def makeBg(self, screen):
-        defaultbg = pygame.Surface(screen.get_size()) 
-        defaultbg = defaultbg.convert()
-        defaultbg.fill((255,204,153))
-        for i in range(self.map.getWidth()):
-            for j in range(self.map.getHeight()):
-                cell = self.map.cellGrid((i,j))
-                if cell.isWalkable():
-                    defaultbg.blit(cell.getSurface(), (i*self.map.getCellWidth(), j*self.map.getCellHeight()))
-        return defaultbg
+    
+    def _make_bg(self, screen):
+        """ create a representation of the map with only walkable and non-walkable cells drawn """
+        bg = pygame.Surface(screen.get_size()) 
+        bg = bg.convert()
+        bg.fill((255, 204, 153))
+        for i in range(self.__MAP.get_width()):
+            for j in range(self.__MAP.get_height()):
+                cell = self.__MAP.cellgrid((i, j))
+                if cell.is_walkable():
+                    bg.blit(cell.get_surface(), (i * self.__MAP.get_cell_width(), j * self.__MAP.get_cell_height()))
+        return bg
     
     
     
@@ -40,26 +42,27 @@ class GameBoard():
     # UPDATE DURING LOOP
     # ---------------------------
     def update(self):
+        """ update the graphics and mechanics of the gameboard """
         # GRAPHICS (needs to be done before towers attack creeps)
-        self.bg = self.defaultbg.copy()
+        self.__bg = self.__DEFAULT_BG.copy()
         # MECHANICS updates
-        for tower in self.TOWERLIST:
+        for tower in self.__tower_list:
             tower.update()
-        for creep in self.CREEPLIST:
-            creep.update()            
-        self.allsprites.empty() #remove all sprites from the sprite set
-        for tower in self.TOWERLIST:
-            self.allsprites.add(tower.sprite)
-        for creep in self.CREEPLIST:
-            self.allsprites.add(creep.sprite)
+        for creep in self.__creep_list:
+            creep.update()
+        self.__all_sprites.empty() #remove all sprites from the __SPRITE set
+        for tower in self.__tower_list:
+            self.__all_sprites.add(tower.get_sprite())
+        for creep in self.__creep_list:
+            self.__all_sprites.add(creep.get_sprite())
         #Draw everything
-        if self.currentSelection: #if a tower is currently selected
-            cells = self.map.reachableCells(self.currentSelection.getCurrentCell(), self.currentSelection.getMvtrange()) 
+        if self.__current_selection: #if a tower is currently selected
+            cells = self.__MAP.get_reachable_cells(self.__current_selection.get_current_cell(), self.__current_selection.get_mvt_range()) 
             for c in cells:#color cells in range in green or red if tower can move or them or not   
-                c.overlayReachable(self.bg, self.map.getCellWidth(), self.map.getCellHeight())
-        self.drawAttacks() #draw the attacks AFTER towers and creeps have moved
-        self.screen.blit(self.bg, (0,0))
-        self.allsprites.draw(self.screen)
+                c.indicate_reachable_cells(self.__bg, self.__MAP.get_cell_width(), self.__MAP.get_cell_height())
+        self._draw_attacks() #draw the attacks AFTER towers and creeps have moved
+        self.__screen.blit(self.__bg, (0, 0))
+        self.__all_sprites.draw(self.__screen)
         return
 
 
@@ -68,57 +71,63 @@ class GameBoard():
     # ---------------------------
     # USER INPUT
     # ---------------------------
-    # actions to do when MOUSEBUTTONUP (dict = pos, button)
-    def leftClick(self, pos):#pos = position of the click
-        for tower in self.TOWERLIST:
-            if tower.getSpriteRect().collidepoint(pos):
-                if(tower == self.currentSelection): #if tower was already selected before
-                    self.currentSelection = None #unselect it
+    def do_left_click(self, pos):#pos = position of the click
+        """ actions to do when left click -- MOUSEBUTTONUP (dict = pos, button) """
+        for tower in self.__tower_list:
+            if tower.is_point_inside_area(pos):
+                if(tower == self.__current_selection): #if tower was already selected before
+                    self.__current_selection = None #unselect it
                     return
                 else: #new tower selected
-                    self.currentSelection = tower #select the new one
+                    self.__current_selection = tower #select the new one
                     return
         # if the function has not returned so far, it's because the user did not click on a tower
-        # => either click on cell with no tower selected
-        # or click to move a tower that had been selected before 
-        cell = self.map.getCellFromScreenCoord(pos) #which cell user clicked in
-        if self.currentSelection != None: #if a tower has been selected before 
-            reachablecells = self.map.reachableCells(self.currentSelection.getCurrentCell(), self.currentSelection.getMvtrange())                 
-            if cell.isWalkable() and cell in reachablecells: # if the destination can receive a tower
-                if not cell.hasCreeps(): #if there is no creep in the destination
-                    self.currentSelection.moveTower(cell) #move tower to destination
-                    self.currentSelection = None #unselect tower
+        # => either it was a click on a cell with no tower selected
+        # or a click to move a tower that had been selected before 
+        cell = self.__MAP.get_cell_from_screen_coord(pos) #which cell user clicked in
+        if self.__current_selection != None: #if a tower has been selected before 
+            reachablecells = self.__MAP.get_reachable_cells(self.__current_selection.get_current_cell(), self.__current_selection.get_mvt_range())                 
+            if cell.is_walkable() and cell in reachablecells: # if the destination can receive a tower
+                if not cell.has_creeps(): #if there is no creep in the destination
+                    self.__current_selection.move_tower(cell) #move tower to destination
+                    self.__current_selection = None #unselect tower
                 #else: #if click on creep, change nothing
             else: # click in non-walkable zone
-                self.currentSelection = None #unselect tower 
+                self.__current_selection = None #unselect tower 
         return  
-    def rightClick(self, pos):
-        self.currentSelection = None #unselect tower 
+    
+    def do_right_click(self, pos):
+        """ actions to do when right click - triggered only when button is up """
+        self.__current_selection = None #unselect tower 
         return
 
 
     # ---------------------------
     # BOARD GAME MECHANICS
     # ---------------------------
-    # checks if the loss condition is true: there is a creep on entrance cell of dungeon
-    def isGameOver(self):
-        return self.map.cellGrid(self.map.getEntranceCoord()).hasCreeps()
+    
+    def is_game_over(self):
+        """ checks if the loss condition is true: there is a creep on entrance cell of dungeon """
+        return self.__MAP.cellgrid(self.__MAP.get_entrance_coords()).has_creeps()
+    #self.__MAP.cellGrid(self.__MAP.get_entrance_coords()).has_creeps()
 
 
 
     # --------------------------
     # GRAPHICS methods
     # -------------------------
-    #graphics STUB - draws a line when a tower or a creep is attacking a tower or a creep
-    def drawAttacks(self):
-        for (atker, defer, color) in self.ATTACKSLIST:
-            endpos = defer.getSpriteCenterCoord()[0] + int(self.map.getCellWidth()*0.1) , defer.getSpriteCenterCoord()[1] + int(self.map.getCellHeight()*0.1)
-            pygame.draw.line(self.bg, color, atker.getSpriteCenterCoord(), endpos , 5) #5 = thickness
-        self.ATTACKSLIST[:] = [] #empty the list when it's done     
+    
+    def _draw_attacks(self):
+        """ graphics STUB - draws a line when a tower or a creep is attacking a tower or a creep """
+        for (atker, defer, color) in self.__attack_list:
+            endpos = defer.get_sprite_center_coords()[0] + int(self.__MAP.get_cell_width()*0.1) , defer.get_sprite_center_coords()[1] + int(self.__MAP.get_cell_height()*0.1)
+            pygame.draw.line(self.__bg, color, atker.get_sprite_center_coords(), endpos , 5) #5 = thickness
+        self.__attack_list[:] = [] #empty the list when it's done     
         return
-    # add a line to be drawn between attacker and defender
-    def drawAtkAnimation(self, tower, creep, color):
-        self.ATTACKSLIST.append((tower, creep, color))
+    
+    def draw_atk_animation(self, tower, creep, color):
+        """ add a line to be drawn between attacker and defender """
+        self.__attack_list.append((tower, creep, color))
         return
 
 
@@ -131,57 +140,71 @@ class GameBoard():
     # -----------------------------------
     
     # graphics services
-    def getCellWidth(self):
-        return self.map.getCellWidth()
-    def getCellHeight(self):
-        return self.map.getCellHeight()
+    def get_cell_width(self):
+        return self.__MAP.get_cell_width()
+    
+    def get_cell_height(self):
+        return self.__MAP.get_cell_height()
     
     #services dealing with towers
-    #add a tower to the game 
-    def addTower(self):
-        (ex, ey) = self.map.getEntranceCoord() #STUB: add tower on entrance by default
-        cell = self.map.cellGrid((ex,ey))
-        tower = Tower(self, (ex*self.map.getCellWidth(), ey*self.map.getCellHeight()), cell)
-        cell.addTower(tower)
-        self.TOWERLIST.append(tower)
+     
+    def add_tower(self):
+        """ add a tower to the game """
+        (ex, ey) = self.__MAP.get_entrance_coords() #STUB: add tower on entrance by default
+        cell = self.__MAP.get_cell_from_grid((ex, ey))
+        tower = Tower(self, (ex * self.__MAP.get_cell_width(), ey * self.__MAP.get_cell_height()), cell)
+        cell.add_tower(tower)
+        self.__tower_list.append(tower)
         return
-    def removeTower(self, tower):
+    
+    def remove_tower(self, tower):
+        """ remove specified tower from the game """
         try:
-            self.TOWERLIST.remove(tower)
+            self.__tower_list.remove(tower)
         except ValueError:
-            print("removeTower tried to remove a tower from the game, but this tower was not in TOWERLIST")
+            print("gameboard.remove_tower tried to remove a tower from the game, but this tower was not in game")
         return
-    #returns list of creeps attackable by tower
-    def getCreepInRange(self, towercell, range):
-        creeplist = set([])
-        for cel in self.map.reachableCells(towercell, range):
-            creeplist = creeplist.union(cel.getCreeps())
-        return creeplist
+    
+    
+    def get_creep_in_range(self, towercell, range):
+        """ returns list of creeps attackable by tower """
+        __creep_list = set([])
+        for cel in self.__MAP.get_reachable_cells(towercell, range):
+            __creep_list = __creep_list.union(cel.get_creeps())
+        return __creep_list
 
 
     #services dealing with creeps
-    #add a creep to the game    
-    def addCreep(self):
-        (lx, ly) = self.map.getLairCoord() #lair coord
-        cell = self.map.cellGrid((lx,ly))
-        creep = Creep(self, (lx*self.map.getCellWidth(), ly*self.map.getCellHeight()), cell)
-        cell.addCreep(creep)
-        self.CREEPLIST.append(creep)
+     
+    def add_creep(self):
+        """ add a creep to the game - creeps appear in the lair """
+        (lx, ly) = self.__MAP.get_lair_coords() #lair coord
+        cell = self.__MAP.get_cell_from_grid((lx, ly))
+        creep = Creep(self, (lx * self.__MAP.get_cell_width(), ly * self.__MAP.get_cell_height()), cell)
+        cell.add_creep(creep)
+        self.__creep_list.append(creep)
         return
-    #removes creep from the game (it probably died)
-    def removeCreep(self, creep):
+    
+    def remove_creep(self, creep):
+        """ removes creep from the game (it probably died) """
         try:
-            self.CREEPLIST.remove(creep)
+            self.__creep_list.remove(creep)
         except ValueError:
-            print("removeCreep tried to remove a creep from the game, but this creep was not in CREEPLIST")
+            print("gameboard.remove_creep tried to remove a creep from the game, but this creep was not in game")
         return
-    #STUB - returns the most appropriate tower for the creep to attack
-    def getCreepBestTarget(self, creep):
-        if self.TOWERLIST: 
-            return self.TOWERLIST[0]
+    
+    
+    def get_creep_best_target(self, creep):
+        """ STUB - returns the most appropriate tower for the creep to attack; right now, it's the first tower in the list of towers """
+        if self.__tower_list: 
+            return self.__tower_list[0]
         else:#empty list: no tower in game, so creep can not attack
             return None
-    #return the cell where creep should go after current cell
-    def nextCellInPath(self, currentcell): #currentcell is a MapCell
-        assert(currentcell.getCoord() != self.map.getEntranceCoord()) #game should be over
-        return self.map.nextInPath(currentcell)
+    
+    def get_next_cell_in_path(self, currentcell): #currentcell is a MapCell
+        """ return the destination where a creep should go """
+        try:
+            assert(currentcell.get_coords() != self.__MAP.get_entrance_coords()) #game should be over
+        except AssertionError:
+                print("Error in gameboard.get_next_cell_in_path: the creep was on the entrance cell, the game should have been over")            
+        return self.__MAP.get_next_cell_in_path(currentcell)

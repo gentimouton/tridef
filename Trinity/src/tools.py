@@ -19,8 +19,8 @@ def load_image(name, destsize):
     return image, image.get_rect()
 
 
-# matrix transposition: return transpose(a)
-def transpose(a):
+# matrix transposition: return matrix_transpose(a)
+def matrix_transpose(a):
     assert(a[0] and a)
     return [[a[i][j] for i in range(len(a))] for j in range(len(a[0]))]
 
