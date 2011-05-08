@@ -1,8 +1,3 @@
-In the order:
-- store colors and map file and other config vars in a INI file, see: 
-http://stackoverflow.com/questions/3595363/properties-file-in-python-similar-to-java-properties
-http://code.activestate.com/recipes/496795-a-python-replacement-for-javautilproperties/
-http://docs.python.org/library/configparser.html
 
 - multiple creeps
 - multiple towers

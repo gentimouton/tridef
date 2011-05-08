@@ -2,20 +2,19 @@ import pygame
 from pygame.locals import QUIT, KEYDOWN, K_ESCAPE, MOUSEBUTTONUP
 
 from gameboard import GameBoard
-
+from config import load_config, config_get_fps, config_get_screen_caption
 
 
 def main():
     #init
-    FPS = 2 #number of frames per second
-    SCREENCAPTION = "Trinity 0.0"
+    load_config()
+    FPS = config_get_fps() #number of frames per second
+    SCREENCAPTION = config_get_screen_caption()
     pygame.init()
-    resolution = (800, 600) #in pixels
-    screen = pygame.display.set_mode(resolution)
     pygame.display.set_caption(SCREENCAPTION)
     pygame.mouse.set_visible(1) #1 == visible, 0==invisible
     clock = pygame.time.Clock()
-    gameBoard = GameBoard(screen, resolution, "testmap.txt") #gameBoard is supposed to be a self-controlled singleton, it is just perturbed by main()
+    gameBoard = GameBoard() #gameBoard is supposed to be a self-controlled singleton, it is just perturbed by main()
   
     
     #game testing

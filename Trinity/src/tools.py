@@ -24,4 +24,5 @@ def matrix_transpose(a):
     assert(a[0] and a)
     return [[a[i][j] for i in range(len(a))] for j in range(len(a[0]))]
 
-            
+
+

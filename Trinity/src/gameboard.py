@@ -3,21 +3,23 @@ import pygame
 from tower import Tower
 from creep import Creep
 from map import Map
-
+from config import config_get_map, config_get_screen_height, config_get_screen_width
 
 #for now, gameboard is both mechanics and graphics
 class GameBoard():
     
-    def __init__(self, screen, res, mapfile): #res = 800*600 as of March 2011
-        self.__screen = screen
+    def __init__(self): #res = 800*600 as of March 2011
+        res = (config_get_screen_width(), config_get_screen_height()) #in pixels
+        self.__screen = pygame.display.set_mode(res)
+        
         # mechanics (some need to be done before graphics)
-        self.__MAP = Map(mapfile, res) #load map from file
+        self.__MAP = Map(config_get_map(), res) #load map from config file
         self.__tower_list = []
         self.__creep_list = []
         self.__attack_list = [] #list elements are (u, v, color), where u and v can be towers or creeps, u is attacker, v is defender, and color is the one used to draw the atk lines between u and v
         # graphics of BG
         self.__current_selection = None #stores what the player has selected under her click
-        self.__DEFAULT_BG = self._make_bg(screen) # representation of the map with only walkable and non-walkable cells drawn
+        self.__DEFAULT_BG = self._make_bg(self.__screen) # representation of the map with only walkable and non-walkable cells drawn
         self.__bg = self.__DEFAULT_BG.copy() # it is the temp bg always updated during the game loop  
         self.__all_sprites = pygame.sprite.Group()
         return
