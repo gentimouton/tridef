@@ -2,16 +2,14 @@ import pygame
 from pygame.locals import QUIT, KEYDOWN, K_ESCAPE, MOUSEBUTTONUP
 
 from gameboard import GameBoard
-from config import load_config, config_get_fps, config_get_screen_caption
+from config import load_config, config_get_fps, config_get_screencaption
 
 
 def main():
     #init
     load_config()
-    FPS = config_get_fps() #number of frames per second
-    SCREENCAPTION = config_get_screen_caption()
     pygame.init()
-    pygame.display.set_caption(SCREENCAPTION)
+    pygame.display.set_caption(config_get_screencaption())
     pygame.mouse.set_visible(1) #1 == visible, 0==invisible
     clock = pygame.time.Clock()
     gameBoard = GameBoard() #gameBoard is supposed to be a self-controlled singleton, it is just perturbed by main()
@@ -25,8 +23,8 @@ def main():
     #Main Loop
     while 1:
         print("tick")
-        clock.tick(FPS)
-        pygame.display.set_caption(SCREENCAPTION + " --- FPS: " + str(clock.get_fps()))
+        clock.tick(config_get_fps()) #number of frames per second
+        pygame.display.set_caption(config_get_screencaption() + " --- FPS: " + str(clock.get_fps()))
         gameBoard.update()
         if gameBoard.is_game_over():
             print("game over!")

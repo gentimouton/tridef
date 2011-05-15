@@ -3,13 +3,13 @@ import pygame
 from tower import Tower
 from creep import Creep
 from map import Map
-from config import config_get_map, config_get_screen_height, config_get_screen_width
+from config import config_get_map, config_get_screenheight, config_get_screenwidth
 
 #for now, gameboard is both mechanics and graphics
 class GameBoard():
     
     def __init__(self): #res = 800*600 as of March 2011
-        res = (config_get_screen_width(), config_get_screen_height()) #in pixels
+        res = (config_get_screenwidth(), config_get_screenheight()) #in pixels
         self.__screen = pygame.display.set_mode(res)
         
         # mechanics (some need to be done before graphics)

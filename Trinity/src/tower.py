@@ -7,7 +7,7 @@ class Tower():
     def __init__(self, gb, sprpos, cell):
         #mechanics
         self.__GAMEBOARD = gb #used to ask the gameboard for services such as "get me a creep to attack"
-        self.__HP = 80
+        self.__hp = 80
         self.__ATK = 1
         self.__ATK_RANGE = 3 #DPS can attack creeps located 3 cells from them
         self.__ATK_COOLDOWN = 5 #cooldown before unit can attack again, in frames
@@ -83,10 +83,10 @@ class Tower():
     
     def defend(self, dmg):
         """ receive dmg from creeps, eventually apply tower def """
-        self.__HP -= dmg
-        if self.__HP <= 0:
+        self.__hp -= dmg
+        if self.__hp <= 0:
             self.die()
-        #print("tower __HP: "+str(self.__HP))
+        #print("tower __hp: "+str(self.__hp))
         return
     
     

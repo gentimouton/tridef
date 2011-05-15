@@ -1,3 +1,6 @@
+from config import config_get_walkablecolor, config_get_entrancecolor, \
+    config_get_laircolor, config_get_nonwalkableoverlay, config_get_walkableoverlay, \
+    config_get_nonwalkablecolor
 import pygame
 
 
@@ -7,21 +10,15 @@ class Cell():
         self.__surface = pygame.Surface((width, height))
         self.__tower = None #tower currently occupying the cell
         self.__creeps = set([]) # list of creeps in the cell
-        self.__coords = coord #
-        self.WALKABLE_COLOR = 222, 222, 222 #gray; color of the walkable cells
-        self.NON_WALKABLE_COLOR = 255, 204, 153 #orange/salmon; color of the non-walkable cells
-        self.__ENTRANCE_COLOR = 0,0,255
-        self.__LAIR_COLOR = 255,0,0
-        self.__NON_WALKABLE_OVERLAY = 255, 0, 0 #red overlay where selected tower can not walk
-        self.__WALKABLE_OVERLAY = 0, 255, 0 # green overlay where selected tower can walk
+        self.__coords = coord #coord of the cell in the board 
         if walkable:
             self.__is_walkable = True
             self.__dist_from_entrance = maxdist #how far is the cell from the entrance; default = boardheight*boardwidth
-            self.__surface.fill(self.WALKABLE_COLOR)
+            self.__surface.fill(config_get_walkablecolor())
         else: #non walkable
             self.__is_walkable = False
             self.__dist_from_entrance = -1 #just in case
-            self.__surface.fill(self.NON_WALKABLE_COLOR)
+            self.__surface.fill(config_get_nonwalkablecolor())
         return
     
     
@@ -45,12 +42,12 @@ class Cell():
     
     def set_entrance(self):
         """colors the cell to show it's an entrance """
-        self.__surface.fill(self.__ENTRANCE_COLOR) #blue
+        self.__surface.fill(config_get_entrancecolor()) #blue
         return
 
     def set_lair(self):
         """ colors the cell to show it's a lair """
-        self.__surface.fill(self.__LAIR_COLOR) #red
+        self.__surface.fill(config_get_laircolor()) #red
         return
 
     
@@ -97,7 +94,7 @@ class Cell():
         surfoverlay = pygame.Surface((width, height))
         surfoverlay.set_alpha(100) #set transparency (higher = less transparent)
         if self.has_tower() or self.has_creeps():
-            surfoverlay.fill(self.__NON_WALKABLE_OVERLAY) #fills the overlay in red 
+            surfoverlay.fill(config_get_nonwalkableoverlay()) #fills the overlay in red 
         else:
-            surfoverlay.fill(self.__WALKABLE_OVERLAY) #fills the overlay in green
+            surfoverlay.fill(config_get_walkableoverlay()) #fills the overlay in green
         bg.blit(surfoverlay, (self.__coords[0] * width, self.__coords[1] * height)) #add the overlay to the main bg
