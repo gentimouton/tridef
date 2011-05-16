@@ -173,6 +173,7 @@ class GameBoard():
         __creep_list = set([])
         for cel in self.__MAP.get_reachable_cells(towercell, range):
             __creep_list = __creep_list.union(cel.get_creeps())
+        print(str(len(__creep_list)) + " creeps in range")
         return __creep_list
 
 
@@ -191,6 +192,7 @@ class GameBoard():
         """ removes creep from the game (it probably died) """
         try:
             self.__creep_list.remove(creep)
+            print("Gameboard: creep removed")
         except ValueError:
             print("gameboard.remove_creep tried to remove a creep from the game, but this creep was not in game")
         return

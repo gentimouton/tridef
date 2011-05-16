@@ -7,22 +7,23 @@ from config import load_config, config_get_fps, config_get_screencaption
 
 def main():
     #init
-    load_config()
+    load_config() #config contains all the constants for the game
     pygame.init()
     pygame.display.set_caption(config_get_screencaption())
     pygame.mouse.set_visible(1) #1 == visible, 0==invisible
     clock = pygame.time.Clock()
     gameBoard = GameBoard() #gameBoard is supposed to be a self-controlled singleton, it is just perturbed by main()
-  
+    frames_elapsed = 0
     
     #game testing
     gameBoard.add_tower()
     gameBoard.add_creep()
 
-
     #Main Loop
     while 1:
         print("tick")
+        if(frames_elapsed % 15 == 0): #just dummy data for now
+            gameBoard.add_creep()
         clock.tick(config_get_fps()) #number of frames per second
         pygame.display.set_caption(config_get_screencaption() + " --- FPS: " + str(clock.get_fps()))
         gameBoard.update()
@@ -41,6 +42,7 @@ def main():
                     gameBoard.do_left_click(event.dict['pos'])
                 elif event.dict['button'] == 3: #right click
                     gameBoard.do_right_click(event.dict['pos'])
+        frames_elapsed += 1
 
 
 if __name__ == '__main__': main()

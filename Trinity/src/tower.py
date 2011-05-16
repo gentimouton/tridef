@@ -114,5 +114,6 @@ class Tower():
     def die(self):
         """ tower death """
         self.__GAMEBOARD.remove_tower(self)
+        self.__current_cell.remove_tower()
         #print("tower dead")
         return

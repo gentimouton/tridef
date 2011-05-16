@@ -110,4 +110,5 @@ class Creep():
     #creep death
     def die(self):
         self.__GAMEBOARD.remove_creep(self)
+        self.__current_cell.remove_creep(self)
         return
