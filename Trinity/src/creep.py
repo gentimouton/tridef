@@ -20,7 +20,7 @@ class Creep():
         self.__MVT_COOLDOWN = config_get_creep_mvt_cooldown() #cooldown before creep can move again, in frames
         #dynamic data (status)
         self.__hp = self.__MAXHP
-        self.__atk_cooldown_tick = config_get_creep_atk_cooldown() #unlike towers, at the beginning creeps can not move
+        self.__atk_cooldown_tick = config_get_creep_atk_cooldown() #at the beginning creeps can not attack
         self.__atk_anim_tick = config_get_creep_atk_anim_duration() #initialized at animduration and decreased each tick. when == 0, creep actually attacks
         # creep actually inflicts dmg every (atkcooldown + atkanimation) frames
         self.__mvt_cooldown_tick = self.__MVT_COOLDOWN #at beginning, creeps have to wait before moving
@@ -37,7 +37,6 @@ class Creep():
         self.__SPRITE.rect.topleft = int(sprpos[0] + self.__GAMEBOARD.get_cell_width()*self.__padding), int(sprpos[1] + self.__GAMEBOARD.get_cell_height()*self.__padding) 
         #if spritescale = 0.8, then padding should be (1-0.8)/2 = 0.1 on top and bottom, and 0.1 on left and right 
         #so that the spr is centered in the middle of the cell
-        
         return 
 
     def update(self):
@@ -56,7 +55,10 @@ class Creep():
         if self.__mvt_cooldown_tick > 0:
             self.__mvt_cooldown_tick -= 1
         else: #creep can move, cooldown is over
-            assert(self.__mvt_cooldown_tick == 0)
+            try:
+                assert(self.__mvt_cooldown_tick <= 0)
+            except AssertionError:
+                print("Error in creep.update_mvt: creep still has to wait before being able to move.")
             nextcell = self.__GAMEBOARD.get_next_cell_in_path(self.__current_cell)
             self.__current_cell.remove_creep(self)
             self.__current_cell = nextcell

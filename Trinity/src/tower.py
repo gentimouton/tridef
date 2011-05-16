@@ -1,31 +1,40 @@
-import pygame
+from config import config_get_tower_hp, config_get_tower_atk, \
+    config_get_tower_atk_range, config_get_tower_mvt_range, \
+    config_get_tower_mvt_cooldown, config_get_tower_atk_cooldown, \
+    config_get_tower_atk_anim_duration, config_get_tower_sprite, \
+    config_get_tower_sprite_scale, config_get_tower_atk_color
 from tools import load_image
+import pygame
 
 
 class Tower():
     
     def __init__(self, gb, sprpos, cell):
-        #mechanics
-        self.__GAMEBOARD = gb #used to ask the gameboard for services such as "get me a creep to attack"
-        self.__hp = 80
-        self.__ATK = 1
-        self.__ATK_RANGE = 3 #DPS can attack creeps located 3 cells from them
-        self.__ATK_COOLDOWN = 5 #cooldown before unit can attack again, in frames
-        self.__atk_cooldown_tick = 0
-        self.__ATK_ANIM_DURATION = 2 # number of frames dedicated to display the attack animation;
-        self.__atk_anim_tick = self.__ATK_ANIM_DURATION #initialized at animduration and decreased each tick. when == 0, tower actually attacks
-        # towers actually inflict dmg to creeps every (__ATK_COOLDOWN + atkanimation) frames
-        self.__MVT_RANGE = 3 #DPS can move 3 cells from them  
-        self.__MVT_COOLDOWN = 3 #cooldown before tower can be moved again, in frames
+        #static data for game mechanics
+        self.__GAMEBOARD = gb # pointer to the game board to ask for services such as "find me a creep to attack" 
+        self.__MAXHP = config_get_tower_hp()
+        self.__ATK = config_get_tower_atk()
+        self.__ATK_RANGE = config_get_tower_atk_range() #range at which tower can attack creep
+        self.__MVT_RANGE =  config_get_tower_mvt_range() #range at which tower can move (2 means it can potentially jump over a creep) 
+        self.__MVT_COOLDOWN = config_get_tower_mvt_cooldown() #cooldown before tower can move again, in frames
+        #dynamic data (status)
+        self.__hp = self.__MAXHP
+        self.__atk_cooldown_tick = config_get_tower_atk_cooldown() #at the beginning it can not attack
+        self.__atk_anim_tick = config_get_tower_atk_anim_duration() #initialized at animduration and decreased each tick. when == 0, tower actually attacks
+        # towers actually inflicts dmg every (atkcooldown + atkanimation) frames
         self.__mvt_cooldown_tick = self.__MVT_COOLDOWN #when towers are created, player has to wait before towers can be moved
         self.__current_cell = cell
-        self.target = None 
-        #GRAPHICS
-        self.__SPRITE = pygame.sprite.Sprite()
-        self.__SPRITE.image, self.__SPRITE.rect = load_image("star.png", (int(self.__GAMEBOARD.get_cell_width()*0.8), int(self.__GAMEBOARD.get_cell_height()*0.8))) #0.8 = scale img at 80%
-        self.__SPRITE.area = pygame.display.get_surface().get_rect()
-        self.__SPRITE.rect.topleft = int(sprpos[0]+self.__GAMEBOARD.get_cell_width()*0.1), int(sprpos[1]+self.__GAMEBOARD.get_cell_height()*0.1) #0.1 = 10% of the rect border
-        self.__ATK_COLOR = (255,20,20) #color of the line between a tower and a creep when the tower attacks it
+        self.__target = None
+        #__SPRITE
+        self.__SPRITE = pygame.sprite.Sprite()   
+        self.__SPRITE.image, self.__SPRITE.rect = load_image(config_get_tower_sprite(), 
+                                                             (int(self.__GAMEBOARD.get_cell_width()*config_get_tower_sprite_scale()),
+                                                             int(self.__GAMEBOARD.get_cell_height()*config_get_tower_sprite_scale()))
+                                                             )
+        self.__padding = (1 - config_get_tower_sprite_scale()) / 2
+        self.__SPRITE.rect.topleft = int(sprpos[0] + self.__GAMEBOARD.get_cell_width()*self.__padding), int(sprpos[1] + self.__GAMEBOARD.get_cell_height()*self.__padding) 
+        #if spritescale = 0.8, then padding should be (1-0.8)/2 = 0.1 on top and bottom, and 0.1 on left and right 
+        #so that the spr is centered in the middle of the cell
         return 
 
     def update(self):
@@ -42,22 +51,22 @@ class Tower():
             self.__atk_cooldown_tick -= 1
         else: #animation period
             try:
-                assert(self.__atk_cooldown_tick == 0)
+                assert(self.__atk_cooldown_tick <= 0)
             except AssertionError:
                 print("Error in tower._update_atk: tower should not be in cooldown period if it's in animation period")
-            if self.target == None: #either the tower didnt have any target before or its target was killed by another tower 
+            if self.__target == None: #either the tower didnt have any __target before or its __target was killed by another tower 
                 creeplist = self.__GAMEBOARD.get_creep_in_range(self.__current_cell, self.__ATK_RANGE) #get the list of creeps in range of __current_cell
                 if creeplist:
-                    self.target = creeplist.pop() #get a random creep in range
-            if self.target == None: #all creeps in sight have been killed before tower could actually attack 
-                self.__ATK_ANIM_DURATION = 0 #come back or stay in default position (ie anim=0 and cooldown=0)
-            else: #tower has a target to attack
-                self.__GAMEBOARD.draw_atk_animation(self, self.target, self.__ATK_COLOR) #ask gameboard to display __ATK graphics in both cases
+                    self.__target = creeplist.pop() #get a random creep in range
+            if self.__target == None: #all creeps in sight have been killed before tower could actually attack 
+                self.__atk_anim_tick = config_get_tower_atk_anim_duration() #come back or stay in default position (ie anim=0 and cooldown=0)
+            else: #tower has a __target to attack
+                self.__GAMEBOARD.draw_atk_animation(self, self.__target, config_get_tower_atk_color()) #ask gameboard to display __ATK graphics in both cases
                 if self.__atk_anim_tick == 0: #time to actually inflict dmg to a creep
-                    self.target.defend(self.__ATK)
-                    self.target = None
-                    self.__atk_anim_tick = self.__ATK_ANIM_DURATION #no anim to draw anymore
-                    self.__atk_cooldown_tick = self.__ATK_COOLDOWN #put in cooldown mode
+                    self.__target.defend(self.__ATK)
+                    self.__target = None
+                    self.__atk_anim_tick = config_get_tower_atk_anim_duration() #no anim to draw anymore
+                    self.__atk_cooldown_tick = config_get_tower_atk_cooldown() #put in cooldown mode
                 else: #tower is doing its atk animation only
                     self.__atk_anim_tick -= 1    
         return 
@@ -97,7 +106,7 @@ class Tower():
         destcell.add_tower(self)
         self.__mvt_cooldown_tick = self.__MVT_COOLDOWN
         x,y = destcell.get_coords() # x = row, starting from top; y = column, starting from left
-        self.__SPRITE.rect.topleft = int((x+0.1)*self.__GAMEBOARD.get_cell_width()), int((y+0.1)*self.__GAMEBOARD.get_cell_height()) #0.1 = for 10% margin at left and right of tower img
+        self.__SPRITE.rect.topleft = int((x+self.__padding)*self.__GAMEBOARD.get_cell_width()), int((y+self.__padding)*self.__GAMEBOARD.get_cell_height()) #0.1 = for 10% margin at left and right of tower img
         return
     
     

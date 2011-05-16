@@ -194,7 +194,7 @@ class Map():
     
      
     def get_next_cell_in_path(self, currentcell):
-        """ c = coord of current cell, return coord of cell after current cell in path """
+        """  return coord of cell after current cell in path """
         neighbors = self._get_adjacent_walkable_cells(currentcell) #get cells around currentcell
         try:
             bestcelltogoto = neighbors.pop() #if the cell is lost in the middle of nowhere with no neighbor, this function should not be called

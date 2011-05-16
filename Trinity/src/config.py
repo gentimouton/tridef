@@ -91,3 +91,36 @@ def config_get_creep_atk_color():
     return (color_from_string(__dict['creep_atk_color']))
 
 
+
+# tower 
+def config_get_tower_hp():
+    return int(__dict['tower_hp'])
+
+def config_get_tower_atk():
+    return int(__dict['tower_atk'])
+
+def config_get_tower_atk_range():
+    return int(__dict['tower_atk_range'])
+
+def config_get_tower_atk_cooldown():
+    return int(__dict['tower_atk_cooldown'])
+ 
+def config_get_tower_atk_anim_duration():
+    return int(__dict['tower_atk_anim_duration'])
+ 
+def config_get_tower_mvt_range():
+    return int(__dict['tower_mvt_range'])
+
+def config_get_tower_mvt_cooldown():
+    return int(__dict['tower_mvt_cooldown'])
+
+def config_get_tower_sprite():
+    return __dict['tower_sprite']
+
+def config_get_tower_sprite_scale():
+    return float(__dict['tower_sprite_scale'])
+
+def config_get_tower_atk_color():
+    return (color_from_string(__dict['tower_atk_color']))
+
+

@@ -1,3 +1,2 @@
-cell, tower, creep, etc. read from config file their parameters
 - multiple creeps
 - multiple towers
