@@ -1,9 +1,11 @@
-import pygame
-
-from tower import Tower
+from config import config_get_map, config_get_screenheight, \
+    config_get_screenwidth
 from creep import Creep
 from map import Map
-from config import config_get_map, config_get_screenheight, config_get_screenwidth
+from random import choice
+from tower import Tower
+import pygame
+
 
 #for now, gameboard is both mechanics and graphics
 class GameBoard():
@@ -173,7 +175,7 @@ class GameBoard():
         __creep_list = set([])
         for cel in self.__MAP.get_reachable_cells(towercell, range):
             __creep_list = __creep_list.union(cel.get_creeps())
-        print(str(len(__creep_list)) + " creeps in range")
+        #print(str(len(__creep_list)) + " creeps in range")
         return __creep_list
 
 
@@ -192,23 +194,29 @@ class GameBoard():
         """ removes creep from the game (it probably died) """
         try:
             self.__creep_list.remove(creep)
-            print("Gameboard: creep removed")
+            #print("Gameboard: creep removed")
         except ValueError:
             print("gameboard.remove_creep tried to remove a creep from the game, but this creep was not in game")
         return
     
     
-    def get_creep_best_target(self, creep):
-        """ STUB - returns the most appropriate tower for the creep to attack; right now, it's the first tower in the list of towers """
-        if self.__tower_list: 
-            return self.__tower_list[0]
-        else:#empty list: no tower in game, so creep can not attack
+    def get_creep_best_target(self, cell):
+        """ returns the most appropriate tower for the creep to attack; 
+         right now, it returns a tower among those surrounding the creep"""
+        adjcells = self.__MAP._get_adjacent_walkable_cells(cell)
+        adjtowers = []
+        for c in adjcells:
+            if c.has_tower():
+                adjtowers + [c.get_tower()]
+        if adjtowers:
+            return choice(adjtowers)
+        else:#empty list: no tower in game, hence creep does not attack
             return None
     
-    def get_next_cell_in_path(self, currentcell): #currentcell is a MapCell
+    def get_next_cells_in_path(self, currentcell): #currentcell is a MapCell
         """ return the destination where a creep should go """
         try:
             assert(currentcell.get_coords() != self.__MAP.get_entrance_coords()) #game should be over
         except AssertionError:
                 print("Error in gameboard.get_next_cell_in_path: the creep was on the entrance cell, the game should have been over")            
-        return self.__MAP.get_next_cell_in_path(currentcell)
+        return self.__MAP.get_next_cells_in_path(currentcell)

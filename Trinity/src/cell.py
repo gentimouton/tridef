@@ -59,7 +59,10 @@ class Cell():
 
     def has_tower(self):
         return self.__tower != None
-    
+
+    def get_tower(self):
+        return self.__tower
+        
     def remove_tower(self):
         self.__tower = None
         return
@@ -98,3 +101,4 @@ class Cell():
         else:
             surfoverlay.fill(config_get_walkableoverlay()) #fills the overlay in green
         bg.blit(surfoverlay, (self.__coords[0] * width, self.__coords[1] * height)) #add the overlay to the main bg
+

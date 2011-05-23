@@ -1,11 +1,12 @@
-import pygame
-import config
-from tools import load_image
-from config import config_get_creep_hp, config_get_creep_atk,\
-    config_get_creep_atk_range, config_get_creep_atk_cooldown,\
-    config_get_creep_atk_anim_duration, config_get_creep_mvt_range,\
-    config_get_creep_mvt_cooldown, config_get_creep_sprite,\
+from config import config_get_creep_hp, config_get_creep_atk, \
+    config_get_creep_atk_range, config_get_creep_atk_cooldown, \
+    config_get_creep_atk_anim_duration, config_get_creep_mvt_range, \
+    config_get_creep_mvt_cooldown, config_get_creep_sprite, \
     config_get_creep_sprite_scale, config_get_creep_atk_color
+from random import shuffle
+from tools import load_image
+import config
+import pygame
 
 
 class Creep():
@@ -40,44 +41,49 @@ class Creep():
         return 
 
     def update(self):
-        destinationcell = self.__GAMEBOARD.get_next_cell_in_path(self.__current_cell)
-        if destinationcell.has_tower(): #if there is a tower in creep's destination cell
-            self.update_atk() #attack tower or atk cooldown or atk animation
-        else:
-            self.update_mvt() #walk to following cell in path, or walk cooldown 
+        """ determine if a creep should attack or move """
+        destinationcells = self.__GAMEBOARD.get_next_cells_in_path(self.__current_cell)
+        for c in destinationcells:
+            if c.has_tower(): #if there is a tower in creep's destination cell
+                self.update_atk(c.get_tower()) #attack tower or atk cooldown or atk animation
+                return
+        #out of the for loop, there is no tower around to attack
+        self.update_mvt(destinationcells) #walk to following cell in path, or walk cooldown 
         #GRAPHICS
         self.__SPRITE.update(self)
         return
 
     
-    def update_mvt(self):
-        """ handles mechanics and graphics for creep movement """
+    def update_mvt(self, destcells):
+        """ handles mechanics and graphics for creep movement, destcells = list of best cells to go to """
         if self.__mvt_cooldown_tick > 0:
             self.__mvt_cooldown_tick -= 1
         else: #creep can move, cooldown is over
             try:
-                assert(self.__mvt_cooldown_tick <= 0)
+                assert(len(destcells) > 0)
             except AssertionError:
-                print("Error in creep.update_mvt: creep still has to wait before being able to move.")
-            nextcell = self.__GAMEBOARD.get_next_cell_in_path(self.__current_cell)
+                print("Creeps had to update its mvt, but had no cell to go to.")
+            #TODO: this is a simple way to pick which cell to go to. Instead, creeps could flock together, or avoid each other?
+            nextcell = destcells[0] 
             self.__current_cell.remove_creep(self)
             self.__current_cell = nextcell
             nextcell.add_creep(self)
             self.__mvt_cooldown_tick = self.__MVT_COOLDOWN
             x, y = nextcell.get_coords()
-            self.__SPRITE.rect.topleft = int((x + self.__padding) * self.__GAMEBOARD.get_cell_width()), int((y + self.__padding) * self.__GAMEBOARD.get_cell_height()) 
+            self.__SPRITE.rect.topleft = (int((x + self.__padding) * self.__GAMEBOARD.get_cell_width()), 
+                                          int((y + self.__padding) * self.__GAMEBOARD.get_cell_height())) 
             #0.1 = for 10% margin at left and right of tower img
         return
 
      
-    def update_atk(self):
-        """ handles mechanics and graphics updates related to creep attacking """
-        if self.__atk_cooldown_tick != 0: #atk cooldown period
-            assert(self.__atk_cooldown_tick > 0)
+    def update_atk(self, tower):
+        """ handles mechanics and graphics updates related to creep attacking a tower """
+        if self.__atk_cooldown_tick > 0: #atk cooldown period
             self.__atk_cooldown_tick -= 1
         else: #animation period
             if self.__target == None: #either the creep didnt have any target before or its target was killed or moved 
-                self.__target = self.__GAMEBOARD.get_creep_best_target(self) #find optimum target; can return None if no tower in sight
+                #self.__target = self.__GAMEBOARD.get_creep_best_target(self.__current_cell) #find optimum target; can return None if no tower in sight
+                self.__target = tower
             if self.__target == None: #no tower in sight
                 self.__atk_anim_tick = config_get_creep_atk_anim_duration() #come back or stay in default position (ie anim=0 and cooldown=0)
             else: #tower has a target to attack

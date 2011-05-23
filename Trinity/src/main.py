@@ -17,13 +17,14 @@ def main():
     
     #game testing
     gameBoard.add_tower()
-    gameBoard.add_creep()
 
     #Main Loop
     while 1:
         print("tick")
-        if(frames_elapsed % 15 == 0): #just dummy data for now
+        if(frames_elapsed % 21 == 5): #spawn creeps
             gameBoard.add_creep()
+        #if(frames_elapsed % 51 == 50): #spawn towers 
+            #gameBoard.add_tower()
         clock.tick(config_get_fps()) #number of frames per second
         pygame.display.set_caption(config_get_screencaption() + " --- FPS: " + str(clock.get_fps()))
         gameBoard.update()

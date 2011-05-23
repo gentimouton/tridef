@@ -30,4 +30,3 @@ def color_from_string(str):
     assert(len(rgb) == 3)
     assert(((int)(rgb[i]) < 256) for i in range(len(rgb)))
     return [((int) (rgb[i])) for i in range(len(rgb))] 
-

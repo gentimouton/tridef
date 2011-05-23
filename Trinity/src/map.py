@@ -1,6 +1,7 @@
-import os
-from tools import matrix_transpose
 from cell import Cell
+from random import choice, shuffle
+from tools import matrix_transpose
+import os
 
 class Map():
     def __init__(self, mapfile, res):
@@ -193,26 +194,35 @@ class Map():
     # -----------------------------------
     
      
-    def get_next_cell_in_path(self, currentcell):
-        """  return coord of cell after current cell in path """
+    def get_next_cells_in_path(self, currentcell):
+        """  return the cells after the current cell in the map path """
         neighbors = self._get_adjacent_walkable_cells(currentcell) #get cells around currentcell
         try:
-            bestcelltogoto = neighbors.pop() #if the cell is lost in the middle of nowhere with no neighbor, this function should not be called
+            bestcell = choice(list(neighbors))
+            bestcellstogoto = [bestcell] #if the cell is lost in the middle of nowhere with no neighbor, this function should not be called
+            bestdist = bestcell.get_dist_from_entrance()
+            neighbors.remove(bestcell)
+            # these 3 lines could certainly be factorized in a more python-way
         except KeyError:
-            print("get_next_cell_in_path: current cell has no neighbor and should have at least one")
+            print("get_next_cells_in_path: current cell has no neighbor and should have at least one")
         for c in neighbors:
-            if c.get_dist_from_entrance() < bestcelltogoto.get_dist_from_entrance(): #c is closer to entrance
-                bestcelltogoto = c
-        return bestcelltogoto
+            cdist = c.get_dist_from_entrance()
+            if cdist < bestdist: #c is closer to entrance
+                bestcellstogoto = [c]
+                bestdist = cdist
+            elif cdist == bestdist:
+                bestcellstogoto.append(c)
+        shuffle(bestcellstogoto) #ensures random behavior of entities
+        return bestcellstogoto
     
-
-    # pos=(x,y)=screen coord, returns the cell in which pos is 
+ 
     def get_cell_from_screen_coord(self, pos):
+        """ returns the cell in which pos is, pos=(x,y)=screen coord, useful to determine in which cell a click falls """
         i = int(pos[0] / self.get_cell_width()) #horizontal
         j = int(pos[1] / self.get_cell_height()) #vertical
         try:
             assert(i >= 0 and j >= 0 and j < self.get_height() and i < self.get_width()) 
         except AssertionError:
-            print("Error in map.get_next_cell_in_path: the cell could not be found in cellgrid")            
+            print("Error in map.get_next_cells_in_path: the cell could not be found in cellgrid")            
         return self.cellgrid((i, j))
 
