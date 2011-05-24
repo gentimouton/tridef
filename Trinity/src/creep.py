@@ -3,9 +3,7 @@ from config import config_get_creep_hp, config_get_creep_atk, \
     config_get_creep_atk_anim_duration, config_get_creep_mvt_range, \
     config_get_creep_mvt_cooldown, config_get_creep_sprite, \
     config_get_creep_sprite_scale, config_get_creep_atk_color
-from random import shuffle
 from tools import load_image
-import config
 import pygame
 
 
