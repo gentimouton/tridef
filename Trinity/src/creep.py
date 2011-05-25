@@ -106,6 +106,8 @@ class Creep():
     
     # receive dmg from towers, eventually apply creep def
     def defend(self, dmg):
+        if self.__hp <= 0: #happens when multiple towers attack the same creep and "over"kill it
+            return
         self.__hp -= dmg
         if self.__hp <= 0:
             self.die()
